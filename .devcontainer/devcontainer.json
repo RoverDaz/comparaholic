@@ -1,0 +1,13 @@
+{
+  "name": "Compare App Dev",
+  "dockerFile": "Dockerfile",
+  "settings": {
+    "terminal.integrated.shell.linux": "/bin/bash"
+  },
+  "extensions": [
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode"
+  ],
+  "forwardPorts": [3000, 5432],
+  "postCreateCommand": "npm install"
+}
