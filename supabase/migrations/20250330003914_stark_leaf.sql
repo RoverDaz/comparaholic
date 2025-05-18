@@ -1,0 +1,39 @@
+-- Drop existing policies
+DO $$ 
+BEGIN
+  DROP POLICY IF EXISTS "Enable read access for everyone" ON user_form_responses;
+  DROP POLICY IF EXISTS "Enable insert for authenticated users" ON user_form_responses;
+  DROP POLICY IF EXISTS "Enable update for users based on user_id" ON user_form_responses;
+  DROP POLICY IF EXISTS "Enable delete for users based on user_id" ON user_form_responses;
+END $$;
+
+-- Create new simplified policies with proper permissions
+CREATE POLICY "Enable read access for everyone"
+ON user_form_responses
+FOR SELECT
+TO public
+USING (true);
+
+CREATE POLICY "Enable insert for authenticated users"
+ON user_form_responses
+FOR INSERT
+TO authenticated
+WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Enable update for users based on user_id"
+ON user_form_responses
+FOR UPDATE
+TO authenticated
+USING (auth.uid() = user_id)
+WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Enable delete for users based on user_id"
+ON user_form_responses
+FOR DELETE
+TO authenticated
+USING (auth.uid() = user_id);
+
+-- Create index for real estate broker responses
+CREATE INDEX IF NOT EXISTS idx_real_estate_broker_responses
+ON user_form_responses (category, created_at DESC)
+WHERE category = 'real-estate-broker';

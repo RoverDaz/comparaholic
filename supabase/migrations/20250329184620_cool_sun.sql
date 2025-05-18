@@ -1,0 +1,58 @@
+/*
+  # Fix Real Estate Data Visibility
+
+  1. Changes
+    - Drop existing policies to avoid conflicts
+    - Create new policies for public read access
+    - Add indexes for performance optimization
+    - Ensure all data is visible to visitors
+
+  2. Security
+    - Maintain write protection for authenticated users
+    - Allow public read access to all responses
+*/
+
+-- Drop existing policies
+DO $$ 
+BEGIN
+  DROP POLICY IF EXISTS "Enable read access for everyone" ON user_form_responses;
+  DROP POLICY IF EXISTS "Enable insert for authenticated users" ON user_form_responses;
+  DROP POLICY IF EXISTS "Enable update for users based on user_id" ON user_form_responses;
+  DROP POLICY IF EXISTS "Enable delete for users based on user_id" ON user_form_responses;
+END $$;
+
+-- Create new policies with proper permissions
+CREATE POLICY "Enable read access for everyone"
+ON user_form_responses
+FOR SELECT
+TO public
+USING (true);
+
+CREATE POLICY "Enable insert for authenticated users"
+ON user_form_responses
+FOR INSERT
+TO authenticated
+WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Enable update for users based on user_id"
+ON user_form_responses
+FOR UPDATE
+TO authenticated
+USING (auth.uid() = user_id)
+WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Enable delete for users based on user_id"
+ON user_form_responses
+FOR DELETE
+TO authenticated
+USING (auth.uid() = user_id);
+
+-- Create optimized indexes
+DROP INDEX IF EXISTS idx_user_form_responses_category_created;
+DROP INDEX IF EXISTS idx_user_form_responses_user_category;
+
+CREATE INDEX idx_user_form_responses_category_created 
+ON user_form_responses (category, created_at DESC);
+
+CREATE INDEX idx_user_form_responses_user_category 
+ON user_form_responses (user_id, category);
